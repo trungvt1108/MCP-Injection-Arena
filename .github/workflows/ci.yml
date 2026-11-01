@@ -21,9 +21,10 @@ jobs:
           - os: windows-latest
             python-version: "3.12"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7 # node24
 
-      - uses: astral-sh/setup-uv@v6
+      # setup-uv publishes no floating major tag (no `v10`), so pin the full version.
+      - uses: astral-sh/setup-uv@v10.3.3 # node24
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
