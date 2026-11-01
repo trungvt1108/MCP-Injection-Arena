@@ -25,5 +25,5 @@ def test_version() -> None:
 
 
 def test_unimplemented_command_fails_cleanly() -> None:
-    result = runner.invoke(app, ["run"])
+    result = runner.invoke(app, ["report"])
     assert result.exit_code == 1

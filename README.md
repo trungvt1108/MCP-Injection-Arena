@@ -37,13 +37,21 @@ Everything runs locally. No real third-party services are contacted, and every
 
 ## Quickstart
 
-> TODO: filled in once `arena run` works.
+Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-# Requires Python 3.11+ and uv (https://docs.astral.sh/uv/)
 uv sync
-uv run arena --help
+uv run arena list                                   # scenarios and defenses
+
+# Offline smoke test: replays each scenario's scripted "compromised agent"
+uv run arena run --model mock --defense none --repeats 1
+
+# A real model, via any LiteLLM provider (Ollama runs fully locally)
+uv run arena run --model ollama/llama3.1 --defense none --scenario all --repeats 3
 ```
+
+Each run writes `results/<timestamp>.json`, plus one JSONL transcript per run in
+`results/<timestamp>/`.
 
 ## Leaderboard
 
