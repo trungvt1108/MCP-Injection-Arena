@@ -46,6 +46,9 @@ class RunRecord(BaseModel):
     scenario_id: str
     scenario_category: str
     injection_technique: str | None
+    injection_template: str | None = None
+    attack_mode: str = "attack"
+    """``"attack"`` with the injection present, or ``"clean"`` for a --no-attack run."""
     defense: str
     defense_version: str
     model: str

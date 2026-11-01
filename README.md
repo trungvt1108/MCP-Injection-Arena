@@ -79,6 +79,15 @@ in a defense we evaluate, see [SECURITY.md](SECURITY.md).
 }
 ```
 
+### Citing the attack suites
+
+Scenarios ship with a neutral `placeholder/default` attack template. The arena can
+also reuse attack families from published benchmarks (AgentDojo today; InjecAgent
+and BIPIA pending license/source verification), loading their payload text at run
+time from each suite's own package rather than vendoring it. If you run those
+templates, cite the originating work too. BibTeX and per-suite license notes are in
+[docs/CITATIONS.md](docs/CITATIONS.md).
+
 ## License
 
 [Apache-2.0](LICENSE)

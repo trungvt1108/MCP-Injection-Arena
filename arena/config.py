@@ -29,6 +29,8 @@ class RunConfig(BaseModel):
     seed: int = 0
     """Base seed. Each (scenario, repeat) derives its own seed from it."""
     confirm_policy: ConfirmPolicy = "always_yes"
+    attack: bool = True
+    """When False (``--no-attack``), the injection is removed to measure clean utility."""
     llm_timeout: float = 120.0
     results_dir: Path = Path("results")
     scenarios_dir: Path = DATA_DIR

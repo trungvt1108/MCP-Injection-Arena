@@ -58,6 +58,13 @@ def run_cmd(
     confirm: Annotated[
         str, typer.Option(help="Simulated user's answer to confirmations: 'yes' or 'no'.")
     ] = "yes",
+    attack: Annotated[
+        bool,
+        typer.Option(
+            "--attack/--no-attack",
+            help="With --no-attack, remove the injection to measure clean utility.",
+        ),
+    ] = True,
     results_dir: Annotated[Path, typer.Option(help="Where to write results.")] = Path("results"),
     scenarios_dir: Annotated[
         Path | None, typer.Option(help="Load scenarios from here instead of the built-in set.")
@@ -78,6 +85,7 @@ def run_cmd(
             max_steps=max_steps,
             seed=seed,
             confirm_policy="always_yes" if confirm == "yes" else "always_no",
+            attack=attack,
             results_dir=results_dir,
             **extra,
         )
@@ -87,7 +95,10 @@ def run_cmd(
         if r.error:
             typer.echo(f"{r.run_id:<60} ERROR  {r.error}")
             return
-        attack = "ATTACK SUCCEEDED" if r.attack_success else "attack blocked "
+        if r.attack_mode == "clean":
+            attack = "no injection   "
+        else:
+            attack = "ATTACK SUCCEEDED" if r.attack_success else "attack blocked "
         utility = "utility ok" if r.utility_success else "utility FAILED"
         typer.echo(f"{r.run_id:<60} {attack}  {utility}")
 
@@ -104,10 +115,13 @@ def run_cmd(
     for sid, runs in totals.items():
         # Errored runs say nothing about the defense, so they are not counted.
         ok = [r for r in runs if r.error is None]
-        asr = sum(r.attack_success for r in ok)
         util = sum(r.utility_success for r in ok)
         errors = f", {len(runs) - len(ok)} errored (excluded)" if len(ok) < len(runs) else ""
-        typer.echo(f"{sid}: attack success {asr}/{len(ok)}, utility {util}/{len(ok)}{errors}")
+        if config.attack:
+            asr = sum(r.attack_success for r in ok)
+            typer.echo(f"{sid}: attack success {asr}/{len(ok)}, utility {util}/{len(ok)}{errors}")
+        else:
+            typer.echo(f"{sid}: clean utility {util}/{len(ok)}{errors}")
     typer.echo(f"\nResults written to {path}")
 
 

@@ -65,8 +65,10 @@ async def run_one(
     """Run one scenario once and judge it."""
     seed = derive_seed(config.seed, scenario.id, repeat)
     defense = get_defense(config.defense)
+    # Clean-utility runs remove the injected content by rendering it to nothing.
+    payload_override = None if config.attack else ""
     with tempfile.TemporaryDirectory(prefix="arena-", ignore_cleanup_errors=True) as tmp:
-        env = materialize(scenario, Path(tmp), random.Random(seed))
+        env = materialize(scenario, Path(tmp), random.Random(seed), payload=payload_override)
         servers = {
             name: defense.wrap_server(stdio_params(name, env.state_dir))
             for name in scenario.servers
@@ -107,6 +109,8 @@ async def run_one(
         scenario_id=scenario.id,
         scenario_category=scenario.category,
         injection_technique=scenario.injection.technique if scenario.injection else None,
+        injection_template=scenario.injection.template if scenario.injection else None,
+        attack_mode="attack" if config.attack else "clean",
         defense=defense.name,
         defense_version=defense.version,
         model=config.model,

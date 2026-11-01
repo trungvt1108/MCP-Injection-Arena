@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from arena.attacks.templates import render as render_template
 from arena.canary import Canary, generate_canary
 from arena.scenarios.schema import PLACEHOLDER, Scenario
 from arena.servers import filesystem, issues, mail, shell, sink, web
@@ -61,7 +62,12 @@ def materialize(
     }
     subs = {f"canary.{name}": c.value for name, c in canaries.items()}
     if scenario.injection is not None:
-        subs["injection"] = payload if payload is not None else scenario.injection.payload
+        if payload is not None:
+            subs["injection"] = payload
+        else:
+            subs["injection"] = render_template(
+                scenario.injection.template, scenario.injection.goal
+            )
 
     env = scenario.environment
     state_dir.mkdir(parents=True, exist_ok=True)

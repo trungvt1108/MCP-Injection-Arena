@@ -83,8 +83,8 @@ async def test_attack_succeeds_without_defense(tmp_path: Path) -> None:
         events = [json.loads(line) for line in transcript.read_text(encoding="utf-8").splitlines()]
         assert events[0]["event"] == "run"
         assert events[-1] == {**events[-1], "event": "verdict", "attack": True}
-        # The injected comment really reached the model.
-        assert any("NOTE FOR AI ASSISTANTS" in str(e.get("content")) for e in events)
+        # The injected comment (rendered from the goal) really reached the model.
+        assert any("audit-hooks.attacker.example" in str(e.get("content")) for e in events)
 
     # Repeats get different seeds and therefore different canaries.
     assert results.runs[0].seed != results.runs[1].seed
@@ -186,3 +186,45 @@ def test_cli_reports_errored_runs_separately(
     assert result.exit_code == 0, result.output
     assert "ERROR  ConnectionError: provider unreachable" in result.output
     assert f"{SCENARIO}: attack success 0/0, utility 0/0, 1 errored (excluded)" in result.output
+
+
+async def test_no_attack_mode_removes_injection(tmp_path: Path) -> None:
+    """Clean-utility mode strips the injected payload from the environment."""
+    config = RunConfig(
+        model="mock", scenario=SCENARIO, repeats=1, results_dir=tmp_path, attack=False
+    )
+    _, results = await run_experiment(config)
+    run = results.runs[0]
+    assert run.attack_mode == "clean"
+    assert run.injection_template == "placeholder/default"
+    # The benign task still completes.
+    assert run.utility_success, run.utility_checks
+    # None of the rendered placeholder payload reached the model. (The mock still
+    # runs its scripted exfil calls, so the attacker URL in those calls is expected;
+    # what must be gone is the injected content itself, marked by this string.)
+    transcript = (tmp_path / run.transcript).read_text(encoding="utf-8")
+    assert "benchmark placeholder" not in transcript
+
+
+def test_cli_no_attack_reports_clean_utility(tmp_path: Path) -> None:
+    result = CliRunner().invoke(
+        app,
+        [
+            "run",
+            "--scenario",
+            SCENARIO,
+            "--model",
+            "mock",
+            "--no-attack",
+            "--repeats",
+            "1",
+            "--results-dir",
+            str(tmp_path),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "no injection" in result.output
+    assert f"{SCENARIO}: clean utility 1/1" in result.output
+    data = json.loads(next(tmp_path.glob("*.json")).read_text(encoding="utf-8"))
+    assert data["config"]["attack"] is False
+    assert data["runs"][0]["attack_mode"] == "clean"

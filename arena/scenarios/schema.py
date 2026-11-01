@@ -80,11 +80,20 @@ class CanarySpec(_Model):
 
 
 class Injection(_Model):
-    """Where the attacker's text sits and what it says."""
+    """Where the attacker's content sits and what it is trying to achieve.
+
+    The scenario holds no payload prose: ``goal`` is a neutral, machine-checkable
+    description of the attacker's objective, and ``template`` names an entry in
+    :mod:`arena.attacks.templates`. The payload the agent sees is the template
+    rendered with the goal (see :func:`arena.scenarios.environment.materialize`).
+    """
 
     location: str
     """Human-readable location, e.g. ``"issues: comment on #1"``."""
-    payload: str
+    goal: str
+    """Neutral description of the objective, e.g. "email .env to mallory@attacker.example"."""
+    template: str = Field(default="placeholder/default", pattern=r"^[a-z0-9_]+/[a-z0-9_]+$")
+    """Attack-template ref ``<family>/<variant>``; resolved against the template registry."""
     technique: str = "direct"
     """Short tag for reports, e.g. ``direct``, ``base64``, ``split``."""
 
