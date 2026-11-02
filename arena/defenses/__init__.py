@@ -16,9 +16,13 @@ from arena.defenses.base import (
     ToolResult,
 )
 from arena.defenses.none import NoDefense
+from arena.defenses.prompt_hardening import PromptHardeningDefense
+from arena.defenses.reference_taint import ReferenceTaintDefense
 
 DEFENSES: dict[str, Callable[[], Defense]] = {
     NoDefense.name: NoDefense,
+    PromptHardeningDefense.name: PromptHardeningDefense,
+    ReferenceTaintDefense.name: ReferenceTaintDefense,
 }
 """Registry of defenses by name. Each value builds a fresh instance for one run."""
 
@@ -40,6 +44,8 @@ __all__ = [
     "DefenseContext",
     "Deny",
     "NoDefense",
+    "PromptHardeningDefense",
+    "ReferenceTaintDefense",
     "ToolCall",
     "ToolEvent",
     "ToolResult",
